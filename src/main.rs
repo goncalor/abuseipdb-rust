@@ -1,4 +1,10 @@
+use serde::Deserialize;
 use toml::Table;
+
+#[derive(Deserialize, Debug)]
+struct Config {
+    api_key: String,
+}
 
 fn main() -> Result<(), ureq::Error> {
     let conf_path = std::path::Path::new("conf.toml");
@@ -7,10 +13,11 @@ fn main() -> Result<(), ureq::Error> {
         Err(e) => panic!("{}", e),
     };
 
-    let conf: Table = conf.parse().unwrap();
-    println!("{}", conf);
+    // let conf: Table = conf.parse().unwrap();
+    let conf: Config = toml::from_str(&conf).unwrap();
+    println!("{:?}", conf);
 
-    let api_key = conf["api_key"].as_str().unwrap();
+    let api_key = &conf.api_key;
     println!("{}", api_key);
 
     let body: String = ureq::get(
