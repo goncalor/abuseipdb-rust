@@ -1,7 +1,7 @@
 use clap::Parser;
 use serde::Deserialize;
 use std::fs::File;
-use std::io::{self, BufRead};
+use std::io::{self, BufRead, Write};
 
 #[derive(Parser, Debug)]
 struct Cli {
@@ -9,6 +9,8 @@ struct Cli {
     conf_file: std::path::PathBuf,
 
     subnets_file: std::path::PathBuf,
+
+    output_file: Option<std::path::PathBuf>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -27,6 +29,11 @@ fn main() -> Result<(), ureq::Error> {
     let api_key = &conf.api_key;
     println!("{}", api_key);
 
+    let mut output: Box<dyn Write> = match args.output_file {
+        Some(f) => Box::new(File::create(f)?),
+        None => Box::new(std::io::stdout()),
+    };
+
     let subnets_file = File::open(args.subnets_file).unwrap();
     for subnet in io::BufReader::new(subnets_file).lines() {
         let subnet = subnet?;
@@ -39,7 +46,7 @@ fn main() -> Result<(), ureq::Error> {
         .call()?
         .into_string()?;
 
-        println!("{}", body);
+        writeln!(output, "{}", body)?;
     }
 
     Ok(())
