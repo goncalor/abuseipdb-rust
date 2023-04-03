@@ -20,11 +20,7 @@ fn main() -> Result<(), ureq::Error> {
     let args = Cli::parse();
     println!("{:?}", args);
 
-    let conf = match std::fs::read_to_string(args.conf_file) {
-        Ok(f) => f,
-        Err(e) => panic!("{}", e),
-    };
-
+    let conf = std::fs::read_to_string(args.conf_file)?;
     let conf: Config = toml::from_str(&conf).unwrap();
     println!("{:?}", conf);
 
