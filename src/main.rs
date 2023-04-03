@@ -1,5 +1,11 @@
+use clap::Parser;
 use serde::Deserialize;
-use toml::Table;
+
+#[derive(Parser, Debug)]
+struct Cli {
+    #[arg(short)]
+    conf_file: std::path::PathBuf,
+}
 
 #[derive(Deserialize, Debug)]
 struct Config {
@@ -7,8 +13,10 @@ struct Config {
 }
 
 fn main() -> Result<(), ureq::Error> {
-    let conf_path = std::path::Path::new("conf.toml");
-    let conf = match std::fs::read_to_string(conf_path) {
+    let args = Cli::parse();
+    println!("{:?}", args);
+
+    let conf = match std::fs::read_to_string(args.conf_file) {
         Ok(f) => f,
         Err(e) => panic!("{}", e),
     };
