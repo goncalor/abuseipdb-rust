@@ -12,6 +12,9 @@ struct Cli {
     subnets_file: std::path::PathBuf,
 
     output_file: Option<std::path::PathBuf>,
+
+    #[arg(long, default_value_t = 15)]
+    max_age: u16,
 }
 
 #[derive(Deserialize, Debug)]
@@ -40,7 +43,8 @@ fn main() -> Result<(), ureq::Error> {
     for subnet in io::BufReader::new(subnets_file).lines() {
         let subnet = subnet?;
         let response: Response = ureq::get(&format!(
-            "http://api.abuseipdb.com/api/v2/check-block?network={subnet}&maxAgeInDays=15"
+            "http://api.abuseipdb.com/api/v2/check-block?network={subnet}&maxAgeInDays={0}",
+            args.max_age
         ))
         .set("Key", api_key)
         .call()?
