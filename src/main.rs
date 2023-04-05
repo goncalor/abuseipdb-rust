@@ -2,6 +2,7 @@ use clap::Parser;
 use serde::Deserialize;
 use std::fs::File;
 use std::io::{self, BufRead, Write};
+use ureq::serde_json;
 
 #[derive(Parser, Debug)]
 struct Cli {
@@ -16,6 +17,11 @@ struct Cli {
 #[derive(Deserialize, Debug)]
 struct Config {
     api_key: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct Response {
+    data: serde_json::Value,
 }
 
 fn main() -> Result<(), ureq::Error> {
@@ -39,14 +45,22 @@ fn main() -> Result<(), ureq::Error> {
         let subnet = subnet?;
         println!("{}", subnet);
 
-        let body: String = ureq::get(&format!(
+        let response: Response = ureq::get(&format!(
             "http://api.abuseipdb.com/api/v2/check-block?network={subnet}&maxAgeInDays=15"
         ))
         .set("Key", api_key)
         .call()?
-        .into_string()?;
+        .into_json()?;
 
-        writeln!(output, "{}", body)?;
+        for address in response
+            .data
+            .get("reportedAddress")
+            .expect("missing reportedAddress")
+            .as_array()
+            .expect("expected reportedAddress to be an array")
+        {
+            writeln!(output, "{:#?}", address)?;
+        }
     }
 
     Ok(())
