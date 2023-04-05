@@ -26,14 +26,10 @@ struct Response {
 
 fn main() -> Result<(), ureq::Error> {
     let args = Cli::parse();
-    println!("{:?}", args);
 
     let conf = std::fs::read_to_string(args.conf_file)?;
     let conf: Config = toml::from_str(&conf).unwrap();
-    println!("{:?}", conf);
-
     let api_key = &conf.api_key;
-    println!("{}", api_key);
 
     let mut output: Box<dyn Write> = match args.output_file {
         Some(f) => Box::new(File::create(f)?),
@@ -43,8 +39,6 @@ fn main() -> Result<(), ureq::Error> {
     let subnets_file = File::open(args.subnets_file).unwrap();
     for subnet in io::BufReader::new(subnets_file).lines() {
         let subnet = subnet?;
-        println!("{}", subnet);
-
         let response: Response = ureq::get(&format!(
             "http://api.abuseipdb.com/api/v2/check-block?network={subnet}&maxAgeInDays=15"
         ))
@@ -59,7 +53,7 @@ fn main() -> Result<(), ureq::Error> {
             .as_array()
             .expect("expected reportedAddress to be an array")
         {
-            writeln!(output, "{:#?}", address)?;
+            writeln!(output, "{}", address)?;
         }
     }
 
