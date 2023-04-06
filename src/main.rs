@@ -43,7 +43,7 @@ fn main() -> Result<(), ureq::Error> {
     for subnet in io::BufReader::new(subnets_file).lines() {
         let subnet = subnet?;
         let response: Response = ureq::get(&format!(
-            "http://api.abuseipdb.com/api/v2/check-block?network={subnet}&maxAgeInDays={0}",
+            "https://api.abuseipdb.com/api/v2/check-block?network={subnet}&maxAgeInDays={0}",
             args.max_age
         ))
         .set("Key", api_key)
