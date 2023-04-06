@@ -1,4 +1,4 @@
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use serde::Deserialize;
 use std::fs::File;
 use std::io::{self, BufRead, Write};
@@ -9,12 +9,22 @@ struct Cli {
     #[arg(short)]
     conf_file: std::path::PathBuf,
 
+    #[command(subcommand)]
+    command: Option<Commands>,
+
     subnets_file: std::path::PathBuf,
 
     output_file: Option<std::path::PathBuf>,
 
     #[arg(long, default_value_t = 15)]
     max_age: u16,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    Check {},
+    CheckBlock {},
+    Blacklist {},
 }
 
 #[derive(Deserialize, Debug)]
