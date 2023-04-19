@@ -5,12 +5,13 @@ use std::io::{self, BufRead, Write};
 use ureq::serde_json;
 
 #[derive(Parser, Debug)]
+#[command(version)]
 struct Cli {
     #[arg(short)]
     conf_file: std::path::PathBuf,
 
     #[command(subcommand)]
-    command: Option<Commands>,
+    command: Commands,
 
     subnets_file: std::path::PathBuf,
 
@@ -22,8 +23,8 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    Check {},
-    CheckBlock {},
+    Check { ips_file: std::path::PathBuf },
+    CheckBlock { subnets_file: std::path::PathBuf },
     Blacklist {},
 }
 
@@ -39,6 +40,7 @@ struct Response {
 
 fn main() -> Result<(), ureq::Error> {
     let args = Cli::parse();
+    dbg!(&args);
 
     let conf = std::fs::read_to_string(args.conf_file)?;
     let conf: Config = toml::from_str(&conf).unwrap();
