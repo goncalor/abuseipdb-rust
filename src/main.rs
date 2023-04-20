@@ -13,8 +13,6 @@ struct Cli {
     #[command(subcommand)]
     command: Commands,
 
-    subnets_file: std::path::PathBuf,
-
     output_file: Option<std::path::PathBuf>,
 
     #[arg(long, default_value_t = 15)]
@@ -46,17 +44,33 @@ fn main() -> Result<(), ureq::Error> {
     let conf: Config = toml::from_str(&conf).unwrap();
     let api_key = &conf.api_key;
 
-    let mut output: Box<dyn Write> = match args.output_file {
+    let output: Box<dyn Write> = match args.output_file {
         Some(f) => Box::new(File::create(f)?),
         None => Box::new(std::io::stdout()),
     };
 
-    let subnets_file = File::open(args.subnets_file).unwrap();
+    match args.command {
+        Commands::CheckBlock { subnets_file } => {
+            check_block(&subnets_file, &api_key, args.max_age, output)?
+        }
+        _ => todo!(),
+    };
+
+    Ok(())
+}
+
+fn check_block(
+    subnets_file: &std::path::PathBuf,
+    api_key: &String,
+    max_age: u16,
+    mut output: Box<dyn Write>,
+) -> Result<(), ureq::Error> {
+    let subnets_file = File::open(subnets_file).unwrap();
     for subnet in io::BufReader::new(subnets_file).lines() {
         let subnet = subnet?;
         let response: Response = ureq::get(&format!(
             "https://api.abuseipdb.com/api/v2/check-block?network={subnet}&maxAgeInDays={0}",
-            args.max_age
+            max_age
         ))
         .set("Key", api_key)
         .call()?
