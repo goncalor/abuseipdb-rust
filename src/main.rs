@@ -14,15 +14,22 @@ struct Cli {
     command: Commands,
 
     output_file: Option<std::path::PathBuf>,
-
-    #[arg(long, default_value_t = 15)]
-    max_age: u16,
 }
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    Check { ips_file: std::path::PathBuf },
-    CheckBlock { subnets_file: std::path::PathBuf },
+    Check {
+        ips_file: std::path::PathBuf,
+
+        #[arg(long, default_value_t = 15)]
+        max_age: u16,
+    },
+    CheckBlock {
+        subnets_file: std::path::PathBuf,
+
+        #[arg(long, default_value_t = 15)]
+        max_age: u16,
+    },
     Blacklist {},
 }
 
@@ -50,9 +57,10 @@ fn main() -> Result<(), ureq::Error> {
     };
 
     match args.command {
-        Commands::CheckBlock { subnets_file } => {
-            check_block(&subnets_file, &api_key, args.max_age, output)?
-        }
+        Commands::CheckBlock {
+            subnets_file,
+            max_age,
+        } => check_block(&subnets_file, &api_key, max_age, output)?,
         _ => todo!(),
     };
 
