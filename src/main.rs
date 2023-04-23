@@ -21,13 +21,13 @@ enum Commands {
     Check {
         ips_file: std::path::PathBuf,
 
-        #[arg(long, default_value_t = 15)]
+        #[arg(long, default_value_t = 30)]
         max_age: u16,
     },
     CheckBlock {
         subnets_file: std::path::PathBuf,
 
-        #[arg(long, default_value_t = 15)]
+        #[arg(long, default_value_t = 30)]
         max_age: u16,
     },
     Blacklist {},
@@ -61,12 +61,14 @@ fn main() -> Result<(), ureq::Error> {
             subnets_file,
             max_age,
         } => check_block(&subnets_file, &api_key, max_age, output)?,
+        Commands::Check { ips_file, max_age } => check(&ips_file, &api_key, max_age, output)?,
         _ => todo!(),
     };
 
     Ok(())
 }
 
+// FIXME: should probably handle a single subnet. Then create check_blocks()
 fn check_block(
     subnets_file: &std::path::PathBuf,
     api_key: &String,
@@ -93,6 +95,30 @@ fn check_block(
         {
             writeln!(output, "{}", address)?;
         }
+    }
+
+    Ok(())
+}
+
+// TODO: verbose flag
+fn check(
+    ips_file: &std::path::PathBuf,
+    api_key: &String,
+    max_age: u16,
+    mut output: Box<dyn Write>,
+) -> Result<(), ureq::Error> {
+    let ips_file = File::open(ips_file).unwrap();
+    for ip in io::BufReader::new(ips_file).lines() {
+        let ip = ip?;
+        let response: Response = ureq::get(&format!(
+            "https://api.abuseipdb.com/api/v2/check?ipAddress={ip}&maxAgeInDays={0}",
+            max_age
+        ))
+        .set("Key", api_key)
+        .call()?
+        .into_json()?;
+
+        writeln!(output, "{}", response.data)?;
     }
 
     Ok(())
