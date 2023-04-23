@@ -23,6 +23,9 @@ enum Commands {
 
         #[arg(long, default_value_t = 30)]
         max_age: u16,
+
+        #[arg(short, default_value_t = false, help = "Verbose (includes reports)")]
+        verbose: bool,
     },
     CheckBlock {
         subnets_file: std::path::PathBuf,
@@ -61,7 +64,11 @@ fn main() -> Result<(), ureq::Error> {
             subnets_file,
             max_age,
         } => check_block(&subnets_file, &api_key, max_age, output)?,
-        Commands::Check { ips_file, max_age } => check(&ips_file, &api_key, max_age, output)?,
+        Commands::Check {
+            ips_file,
+            max_age,
+            verbose,
+        } => check(&ips_file, &api_key, max_age, verbose, output)?,
         _ => todo!(),
     };
 
@@ -100,19 +107,23 @@ fn check_block(
     Ok(())
 }
 
-// TODO: verbose flag
 fn check(
     ips_file: &std::path::PathBuf,
     api_key: &String,
     max_age: u16,
+    verbose: bool,
     mut output: Box<dyn Write>,
 ) -> Result<(), ureq::Error> {
     let ips_file = File::open(ips_file).unwrap();
     for ip in io::BufReader::new(ips_file).lines() {
         let ip = ip?;
         let response: Response = ureq::get(&format!(
-            "https://api.abuseipdb.com/api/v2/check?ipAddress={ip}&maxAgeInDays={0}",
-            max_age
+            "https://api.abuseipdb.com/api/v2/check?ipAddress={ip}&maxAgeInDays={0}{1}",
+            max_age,
+            match verbose {
+                true => "&verbose",
+                false => "",
+            },
         ))
         .set("Key", api_key)
         .call()?
