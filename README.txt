@@ -1,10 +1,15 @@
-Usage: abuseipdb [OPTIONS] -c <CONF_FILE> <SUBNETS_FILE> [OUTPUT_FILE]
+Usage: abuseipdb -c <CONF_FILE> [OUTPUT_FILE] <COMMAND>
+
+Commands:
+  check
+  check-block
+  blacklist    # Still unimplemented
+  help         Print this message or the help of the given subcommand(s)
 
 Arguments:
-  <SUBNETS_FILE>  
-  [OUTPUT_FILE]   
+  [OUTPUT_FILE]
 
 Options:
-  -c <CONF_FILE>           
-      --max-age <MAX_AGE>  [default: 15]
-  -h, --help               Print help
+  -c <CONF_FILE>
+  -h, --help          Print help
+  -V, --version       Print version
