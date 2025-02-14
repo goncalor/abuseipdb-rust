@@ -54,7 +54,7 @@ fn main() -> Result<(), ureq::Error> {
     let conf: Config = toml::from_str(&conf).unwrap();
     let api_key = &conf.api_key;
 
-    let output: Box<dyn Write> = match args.output_file {
+    let mut output: Box<dyn Write> = match args.output_file {
         Some(f) => Box::new(File::create(f)?),
         None => Box::new(std::io::stdout()),
     };
@@ -63,7 +63,7 @@ fn main() -> Result<(), ureq::Error> {
         Commands::CheckBlock {
             subnets_file,
             max_age,
-        } => check_block(&subnets_file, &api_key, max_age, output)?,
+        } => check_block_file(&subnets_file, &api_key, max_age, &mut output)?,
         Commands::Check {
             ips_file,
             max_age,
@@ -75,33 +75,42 @@ fn main() -> Result<(), ureq::Error> {
     Ok(())
 }
 
-// FIXME: should probably handle a single subnet. Then create check_blocks()
 fn check_block(
+    subnet: &String,
+    api_key: &String,
+    max_age: u16,
+    output: &mut Box<dyn Write>,
+) -> Result<(), ureq::Error> {
+    let response: Response = ureq::get(&format!(
+        "https://api.abuseipdb.com/api/v2/check-block?network={subnet}&maxAgeInDays={0}",
+        max_age
+    ))
+    .set("Key", api_key)
+    .call()?
+    .into_json()?;
+
+    for address in response
+        .data
+        .get("reportedAddress")
+        .expect("missing reportedAddress")
+        .as_array()
+        .expect("expected reportedAddress to be an array")
+    {
+        writeln!(output, "{}", address)?;
+    }
+
+    Ok(())
+}
+
+fn check_block_file(
     subnets_file: &std::path::PathBuf,
     api_key: &String,
     max_age: u16,
-    mut output: Box<dyn Write>,
+    output: &mut Box<dyn Write>,
 ) -> Result<(), ureq::Error> {
     let subnets_file = File::open(subnets_file).unwrap();
     for subnet in io::BufReader::new(subnets_file).lines() {
-        let subnet = subnet?;
-        let response: Response = ureq::get(&format!(
-            "https://api.abuseipdb.com/api/v2/check-block?network={subnet}&maxAgeInDays={0}",
-            max_age
-        ))
-        .set("Key", api_key)
-        .call()?
-        .into_json()?;
-
-        for address in response
-            .data
-            .get("reportedAddress")
-            .expect("missing reportedAddress")
-            .as_array()
-            .expect("expected reportedAddress to be an array")
-        {
-            writeln!(output, "{}", address)?;
-        }
+        check_block(&subnet?, api_key, max_age, output)?
     }
 
     Ok(())
