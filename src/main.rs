@@ -55,6 +55,7 @@ fn main() -> Result<(), ureq::Error> {
     let api_key = &conf.api_key;
 
     let mut output: Box<dyn Write> = match args.output_file {
+        // TODO: error if file exists?
         Some(f) => Box::new(File::create(f)?),
         None => Box::new(std::io::stdout()),
     };
@@ -68,7 +69,7 @@ fn main() -> Result<(), ureq::Error> {
             ips_file,
             max_age,
             verbose,
-        } => check(&ips_file, &api_key, max_age, verbose, output)?,
+        } => check_file(&ips_file, &api_key, max_age, verbose, &mut output)?,
         _ => todo!(),
     };
 
@@ -117,28 +118,40 @@ fn check_block_file(
 }
 
 fn check(
+    ip: &String,
+    api_key: &String,
+    max_age: u16,
+    verbose: bool,
+    output: &mut Box<dyn Write>,
+) -> Result<(), ureq::Error> {
+    let response: Response = ureq::get(&format!(
+        "https://api.abuseipdb.com/api/v2/check?ipAddress={ip}&maxAgeInDays={0}{1}",
+        max_age,
+        match verbose {
+            true => "&verbose",
+            false => "",
+        },
+    ))
+    .set("Key", api_key)
+    .call()?
+    .into_json()?;
+
+    writeln!(output, "{}", response.data)?;
+
+    Ok(())
+}
+
+fn check_file(
     ips_file: &std::path::PathBuf,
     api_key: &String,
     max_age: u16,
     verbose: bool,
-    mut output: Box<dyn Write>,
+    output: &mut Box<dyn Write>,
 ) -> Result<(), ureq::Error> {
     let ips_file = File::open(ips_file).unwrap();
     for ip in io::BufReader::new(ips_file).lines() {
         let ip = ip?;
-        let response: Response = ureq::get(&format!(
-            "https://api.abuseipdb.com/api/v2/check?ipAddress={ip}&maxAgeInDays={0}{1}",
-            max_age,
-            match verbose {
-                true => "&verbose",
-                false => "",
-            },
-        ))
-        .set("Key", api_key)
-        .call()?
-        .into_json()?;
-
-        writeln!(output, "{}", response.data)?;
+        check(&ip, api_key, max_age, verbose, output)?
     }
 
     Ok(())
