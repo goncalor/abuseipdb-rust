@@ -69,7 +69,7 @@ fn main() -> Result<(), ureq::Error> {
             ips_file,
             max_age,
             verbose,
-        } => check_file(&ips_file, &api_key, max_age, verbose, &mut output)?,
+        } => check_ip_file(&ips_file, &api_key, max_age, verbose, &mut output)?,
         _ => todo!(),
     };
 
@@ -117,7 +117,7 @@ fn check_block_file(
     Ok(())
 }
 
-fn check(
+fn check_ip(
     ip: &String,
     api_key: &String,
     max_age: u16,
@@ -141,7 +141,7 @@ fn check(
     Ok(())
 }
 
-fn check_file(
+fn check_ip_file(
     ips_file: &std::path::PathBuf,
     api_key: &String,
     max_age: u16,
@@ -151,7 +151,7 @@ fn check_file(
     let ips_file = File::open(ips_file).unwrap();
     for ip in io::BufReader::new(ips_file).lines() {
         let ip = ip?;
-        check(&ip, api_key, max_age, verbose, output)?
+        check_ip(&ip, api_key, max_age, verbose, output)?
     }
 
     Ok(())
