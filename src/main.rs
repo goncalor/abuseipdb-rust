@@ -33,7 +33,29 @@ enum Commands {
         #[arg(long, default_value_t = 30)]
         max_age: u16,
     },
-    Blacklist {},
+    Blacklist {
+        #[arg(
+            name = "cmin",
+            long,
+            default_value_t = 100,
+            help = "Mininum confidence score"
+        )]
+        min_confidence: u8,
+
+        #[arg(
+            long,
+            default_value_t = 10_000,
+            help = "The maximum number of IPs included in the report"
+        )]
+        limit: u32,
+
+        #[arg(
+            long,
+            default_value_t = false,
+            help = "Output plaintext, one IP per line. The default output format is JSON"
+        )]
+        plain: bool,
+    },
 }
 
 #[derive(Deserialize, Debug)]
