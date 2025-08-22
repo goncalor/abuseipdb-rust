@@ -36,6 +36,7 @@ enum Commands {
     Blacklist {
         #[arg(
             name = "cmin",
+            value_name = "CMIN",
             long,
             default_value_t = 100,
             help = "Mininum confidence score"
@@ -55,6 +56,14 @@ enum Commands {
             help = "Output plaintext, one IP per line. The default output format is JSON"
         )]
         plain: bool,
+
+        #[arg(
+            long,
+            default_value = "4,6",
+            value_parser = clap::builder::PossibleValuesParser::new(["4", "6", "4,6"]),
+            help = "IP versions to include in the report"
+        )]
+        ip_version: String,
     },
 }
 
