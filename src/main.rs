@@ -7,7 +7,7 @@ use std::io::{self, BufRead, Write};
 #[derive(Parser, Debug)]
 #[command(version)]
 struct Cli {
-    #[arg(short)]
+    #[arg(short, default_value = "conf.toml")]
     conf_file: std::path::PathBuf,
 
     #[command(subcommand)]
@@ -85,7 +85,14 @@ fn main() -> Result<(), ureq::Error> {
     let args = Cli::parse();
     // dbg!(&args);
 
-    let conf = std::fs::read_to_string(args.conf_file)?;
+    let conf = match std::fs::read_to_string(&args.conf_file) {
+        Ok(c) => c,
+        Err(e) => panic!(
+            "Could not read config file '{0}': {1}",
+            args.conf_file.display(),
+            e
+        ),
+    };
     let conf: Config = toml::from_str(&conf).unwrap();
     let api_key = &conf.api_key;
 

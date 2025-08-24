@@ -1,4 +1,4 @@
-Usage: abuseipdb -c <CONF_FILE> [OUTPUT_FILE] <COMMAND>
+Usage: abuseipdb [OPTIONS] [OUTPUT_FILE] <COMMAND>
 
 Commands:
   check        Get data about IPs
@@ -10,6 +10,6 @@ Arguments:
   [OUTPUT_FILE]  File to write output to. If unspecified, output goes to stdout
 
 Options:
-  -c <CONF_FILE>
+  -c <CONF_FILE>      [default: conf.toml]
   -h, --help          Print help
   -V, --version       Print version
