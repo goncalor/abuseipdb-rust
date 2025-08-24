@@ -83,7 +83,7 @@ struct Response {
 
 fn main() -> Result<(), ureq::Error> {
     let args = Cli::parse();
-    dbg!(&args);
+    // dbg!(&args);
 
     let conf = std::fs::read_to_string(args.conf_file)?;
     let conf: Config = toml::from_str(&conf).unwrap();
@@ -230,13 +230,18 @@ fn blacklist(
     .header("Key", api_key)
     .call()?;
 
-    match plain {
-        true => writeln!(output, "{}", response.body_mut().read_to_string()?)?,
-        false => writeln!(
-            output,
-            "{}",
-            response.body_mut().read_json::<Response>()?.data
-        )?,
+    if plain {
+        writeln!(output, "{}", response.body_mut().read_to_string()?)?;
+    } else {
+        for address in response
+            .body_mut()
+            .read_json::<Response>()?
+            .data
+            .as_array()
+            .expect("expected data to be an array")
+        {
+            writeln!(output, "{}", address)?;
+        }
     }
 
     Ok(())
