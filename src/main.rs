@@ -59,11 +59,10 @@ enum Commands {
 
         #[arg(
             long,
-            default_value = "4,6",
-            value_parser = clap::builder::PossibleValuesParser::new(["4", "6", "4,6"]),
-            help = "IP versions to include in the report"
+            value_parser = clap::builder::PossibleValuesParser::new(["4", "6"]),
+            help = "Include only specified IP version in the report"
         )]
-        ip_version: String,
+        ip_version: Option<String>,
     },
 }
 
@@ -111,7 +110,7 @@ fn main() -> Result<(), ureq::Error> {
             min_confidence,
             limit,
             plain,
-            &ip_version,
+            ip_version,
             &mut output,
         )?,
         // _ => todo!(),
@@ -208,15 +207,19 @@ fn blacklist(
     min_confidence: u8,
     limit: u32,
     plain: bool,
-    ip_version: &String,
+    ip_version: Option<String>,
     output: &mut Box<dyn Write>,
 ) -> Result<(), ureq::Error> {
-    //TODO: user .query()
+    //TODO: use .query()
     let mut response = ureq::get(&format!(
-        "https://api.abuseipdb.com/api/v2/blacklist?confidenceMinimum={min_confidence}&limit={limit}{0}&ipVersion={ip_version}",
+        "https://api.abuseipdb.com/api/v2/blacklist?confidenceMinimum={min_confidence}&limit={limit}{0}{1}",
         match plain {
             true => "&plaintext",
             false => "",
+        },
+        match ip_version {
+            Some(ver) => format!("&ipVersion={ver}"),
+            None => String::new(),
         },
     ))
     .header("Key", api_key)

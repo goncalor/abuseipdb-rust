@@ -3,7 +3,7 @@ Usage: abuseipdb -c <CONF_FILE> [OUTPUT_FILE] <COMMAND>
 Commands:
   check
   check-block
-  blacklist    # Still unimplemented
+  blacklist
   help         Print this message or the help of the given subcommand(s)
 
 Arguments:
