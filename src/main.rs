@@ -1,8 +1,8 @@
 use clap::{Parser, Subcommand};
 use serde::Deserialize;
+use serde_json;
 use std::fs::File;
 use std::io::{self, BufRead, Write};
-use ureq::serde_json;
 
 #[derive(Parser, Debug)]
 #[command(version)]
@@ -117,9 +117,10 @@ fn check_block(
         "https://api.abuseipdb.com/api/v2/check-block?network={subnet}&maxAgeInDays={0}",
         max_age
     ))
-    .set("Key", api_key)
+    .header("Key", api_key)
     .call()?
-    .into_json()?;
+    .body_mut()
+    .read_json::<Response>()?;
 
     for address in response
         .data
@@ -163,9 +164,10 @@ fn check_ip(
             false => "",
         },
     ))
-    .set("Key", api_key)
+    .header("Key", api_key)
     .call()?
-    .into_json()?;
+    .body_mut()
+    .read_json::<Response>()?;
 
     writeln!(output, "{}", response.data)?;
 
