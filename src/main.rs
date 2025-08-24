@@ -101,7 +101,20 @@ fn main() -> Result<(), ureq::Error> {
             max_age,
             verbose,
         } => check_ip_file(&ips_file, &api_key, max_age, verbose, &mut output)?,
-        _ => todo!(),
+        Commands::Blacklist {
+            min_confidence,
+            limit,
+            plain,
+            ip_version,
+        } => blacklist(
+            &api_key,
+            min_confidence,
+            limit,
+            plain,
+            &ip_version,
+            &mut output,
+        )?,
+        // _ => todo!(),
     };
 
     Ok(())
@@ -185,6 +198,37 @@ fn check_ip_file(
     for ip in io::BufReader::new(ips_file).lines() {
         let ip = ip?;
         check_ip(&ip, api_key, max_age, verbose, output)?
+    }
+
+    Ok(())
+}
+
+fn blacklist(
+    api_key: &String,
+    min_confidence: u8,
+    limit: u32,
+    plain: bool,
+    ip_version: &String,
+    output: &mut Box<dyn Write>,
+) -> Result<(), ureq::Error> {
+    //TODO: user .query()
+    let mut response = ureq::get(&format!(
+        "https://api.abuseipdb.com/api/v2/blacklist?confidenceMinimum={min_confidence}&limit={limit}{0}&ipVersion={ip_version}",
+        match plain {
+            true => "&plaintext",
+            false => "",
+        },
+    ))
+    .header("Key", api_key)
+    .call()?;
+
+    match plain {
+        true => writeln!(output, "{}", response.body_mut().read_to_string()?)?,
+        false => writeln!(
+            output,
+            "{}",
+            response.body_mut().read_json::<Response>()?.data
+        )?,
     }
 
     Ok(())
