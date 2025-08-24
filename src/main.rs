@@ -13,11 +13,14 @@ struct Cli {
     #[command(subcommand)]
     command: Commands,
 
+    #[arg(help = "File to write output to. If unspecified, output goes to stdout")]
     output_file: Option<std::path::PathBuf>,
 }
 
 #[derive(Subcommand, Debug)]
+// #[command(flatten_help = true)]
 enum Commands {
+    /// Get data about IPs
     Check {
         ips_file: std::path::PathBuf,
 
@@ -27,12 +30,14 @@ enum Commands {
         #[arg(short, default_value_t = false, help = "Verbose (includes reports)")]
         verbose: bool,
     },
+    /// Get data about CIDR blocks
     CheckBlock {
         subnets_file: std::path::PathBuf,
 
         #[arg(long, default_value_t = 30)]
         max_age: u16,
     },
+    /// Get blacklist data
     Blacklist {
         #[arg(
             name = "cmin",
