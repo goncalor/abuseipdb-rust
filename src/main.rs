@@ -69,6 +69,8 @@ enum Commands {
         )]
         ip_version: Option<String>,
     },
+    /// (Unimplemented)
+    Configure {},
 }
 
 #[derive(Deserialize, Debug)]
@@ -125,6 +127,7 @@ fn main() -> Result<(), ureq::Error> {
             ip_version,
             &mut output,
         )?,
+        Commands::Configure {} => configure(&args.conf_file)?,
         // _ => todo!(),
     };
 
@@ -250,6 +253,20 @@ fn blacklist(
             writeln!(output, "{}", address)?;
         }
     }
+
+    Ok(())
+}
+
+fn configure(conf_file: &std::path::PathBuf) -> Result<(), ureq::Error> {
+    println!("Config will be written to '{0}'.", &conf_file.display());
+
+    let mut buf = String::new();
+    print!("API key: ");
+    io::stdout().flush()?;
+    io::stdin().read_line(&mut buf)?;
+    let key = buf.trim().to_string();
+
+    dbg!(key);
 
     Ok(())
 }
