@@ -95,6 +95,12 @@ fn main() -> Result<(), ureq::Error> {
             e
         ),
     };
+
+    if let Commands::Configure {} = args.command {
+        configure(&args.conf_file)?;
+        std::process::exit(0);
+    }
+
     let conf: Config = toml::from_str(&conf).unwrap();
     let api_key = &conf.api_key;
 
@@ -127,7 +133,7 @@ fn main() -> Result<(), ureq::Error> {
             ip_version,
             &mut output,
         )?,
-        Commands::Configure {} => configure(&args.conf_file)?,
+        Commands::Configure {} => unreachable!(),
         // _ => todo!(),
     };
 
