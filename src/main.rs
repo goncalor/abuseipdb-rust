@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json;
 use std::fs::File;
 use std::io::{self, BufRead, Write};
@@ -73,7 +73,7 @@ enum Commands {
     Configure {},
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 struct Config {
     api_key: String,
 }
@@ -271,8 +271,12 @@ fn configure(conf_file: &std::path::PathBuf) -> Result<(), ureq::Error> {
     io::stdout().flush()?;
     io::stdin().read_line(&mut buf)?;
     let key = buf.trim().to_string();
+    let conf = toml::to_string(&Config {api_key: key}).unwrap();
 
-    dbg!(key);
+    //TODO: check if file exits. Do not overwrite
+
+    let mut file = File::create(&conf_file)?;
+    write!(file, "{}", &conf)?;
 
     Ok(())
 }
