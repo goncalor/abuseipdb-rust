@@ -87,6 +87,11 @@ fn main() -> Result<(), ureq::Error> {
     let args = Cli::parse();
     // dbg!(&args);
 
+    if let Commands::Configure {} = args.command {
+        configure(&args.conf_file)?;
+        std::process::exit(0);
+    }
+
     let conf = match std::fs::read_to_string(&args.conf_file) {
         Ok(c) => c,
         Err(e) => panic!(
@@ -95,12 +100,6 @@ fn main() -> Result<(), ureq::Error> {
             e
         ),
     };
-
-    if let Commands::Configure {} = args.command {
-        configure(&args.conf_file)?;
-        std::process::exit(0);
-    }
-
     let conf: Config = toml::from_str(&conf).unwrap();
     let api_key = &conf.api_key;
 
