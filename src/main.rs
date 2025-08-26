@@ -271,11 +271,11 @@ fn configure(conf_file: &std::path::PathBuf) -> Result<(), ureq::Error> {
     io::stdout().flush()?;
     io::stdin().read_line(&mut buf)?;
     let key = buf.trim().to_string();
-    let conf = toml::to_string(&Config {api_key: key}).unwrap();
+    let conf = toml::to_string(&Config { api_key: key }).unwrap();
 
-    //TODO: check if file exits. Do not overwrite
-
-    let mut file = File::create(&conf_file)?;
+    // Error out if file exists
+    let mut file = File::create_new(&conf_file)
+        .expect(&format!("Could not create file '{0}'", conf_file.display()));
     write!(file, "{}", &conf)?;
 
     Ok(())
