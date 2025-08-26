@@ -92,20 +92,17 @@ fn main() -> Result<(), ureq::Error> {
         std::process::exit(0);
     }
 
-    let conf = match std::fs::read_to_string(&args.conf_file) {
-        Ok(c) => c,
-        Err(e) => panic!(
-            "Could not read config file '{0}': {1}",
-            args.conf_file.display(),
-            e
-        ),
-    };
+    let conf = std::fs::read_to_string(&args.conf_file).expect(&format!(
+        "Could not read config file '{0}'",
+        args.conf_file.display()
+    ));
     let conf: Config = toml::from_str(&conf).unwrap();
     let api_key = &conf.api_key;
 
     let mut output: Box<dyn Write> = match args.output_file {
-        // TODO: error if file exists?
-        Some(f) => Box::new(File::create(f)?),
+        Some(f) => Box::new(
+            File::create_new(&f).expect(&format!("Could not create file '{0}'", f.display())),
+        ),
         None => Box::new(std::io::stdout()),
     };
 
