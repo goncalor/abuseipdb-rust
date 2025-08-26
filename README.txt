@@ -4,6 +4,7 @@ Commands:
   check        Get data about IPs
   check-block  Get data about CIDR blocks
   blacklist    Get blacklist data
+  configure    Write a configuration file with the provided API key
   help         Print this message or the help of the given subcommand(s)
 
 Arguments:

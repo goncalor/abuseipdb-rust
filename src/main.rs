@@ -69,7 +69,7 @@ enum Commands {
         )]
         ip_version: Option<String>,
     },
-    /// (Unimplemented)
+    /// Write a configuration file with the provided API key
     Configure {},
 }
 
