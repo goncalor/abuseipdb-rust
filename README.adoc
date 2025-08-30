@@ -1,0 +1,35 @@
+= abuseipdb-rust
+
+`abuseipdb-rust` is an AbuseIPDB client written in Rust (maybe a library as well in the future).
+
+== Configuration
+
+To start using `abuseipdb-rust`, you need to configure it with an API key (to get one you need an AbuseIPDB account). The API key is stored in a configuration file, which you can easily create with the `configure` command:
+
+----
+$ abuseipdb configure
+
+Config will be written to 'conf.toml'.
+API key: deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef
+----
+
+== Usage
+
+----
+Usage: abuseipdb [OPTIONS] [OUTPUT_FILE] <COMMAND>
+
+Commands:
+  check        Get data about IPs
+  check-block  Get data about CIDR blocks
+  blacklist    Get blacklist data
+  configure    Write a configuration file with the provided API key
+  help         Print this message or the help of the given subcommand(s)
+
+Arguments:
+  [OUTPUT_FILE]  File to write output to. If unspecified, output goes to stdout
+
+Options:
+  -c <CONF_FILE>      [default: conf.toml]
+  -h, --help          Print help
+  -V, --version       Print version
+----
