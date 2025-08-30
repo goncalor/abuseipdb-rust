@@ -142,22 +142,22 @@ fn check_block(
     max_age: u16,
     output: &mut Box<dyn Write>,
 ) -> Result<(), ureq::Error> {
-    let response: Response = ureq::get(&format!(
-        "https://api.abuseipdb.com/api/v2/check-block?network={subnet}&maxAgeInDays={0}",
-        max_age
-    ))
-    .header("Key", api_key)
-    .call()?
-    .body_mut()
-    .read_json::<Response>()?;
+    let query = ureq::get("https://api.abuseipdb.com/api/v2/check-block")
+        .query("network", subnet)
+        .query("maxAgeInDays", max_age.to_string());
+    let response: Response = query
+        .header("Key", api_key)
+        .call()?
+        .body_mut()
+        .read_json::<Response>()?;
 
-    for address in response
+    let addresses = response
         .data
         .get("reportedAddress")
         .expect("missing reportedAddress")
         .as_array()
-        .expect("expected reportedAddress to be an array")
-    {
+        .expect("expected reportedAddress to be an array");
+    for address in addresses {
         writeln!(output, "{}", address)?;
     }
 
@@ -185,18 +185,18 @@ fn check_ip(
     verbose: bool,
     output: &mut Box<dyn Write>,
 ) -> Result<(), ureq::Error> {
-    let response: Response = ureq::get(&format!(
-        "https://api.abuseipdb.com/api/v2/check?ipAddress={ip}&maxAgeInDays={0}{1}",
-        max_age,
-        match verbose {
-            true => "&verbose",
-            false => "",
-        },
-    ))
-    .header("Key", api_key)
-    .call()?
-    .body_mut()
-    .read_json::<Response>()?;
+    let mut query = ureq::get("https://api.abuseipdb.com/api/v2/check")
+        .query("ipAddress", ip)
+        .query("maxAgeInDays", max_age.to_string());
+    if verbose {
+        query = query.query("verbose", "");
+    }
+
+    let response: Response = query
+        .header("Key", api_key)
+        .call()?
+        .body_mut()
+        .read_json::<Response>()?;
 
     writeln!(output, "{}", response.data)?;
 
@@ -227,20 +227,17 @@ fn blacklist(
     ip_version: Option<String>,
     output: &mut Box<dyn Write>,
 ) -> Result<(), ureq::Error> {
-    //TODO: use .query()
-    let mut response = ureq::get(&format!(
-        "https://api.abuseipdb.com/api/v2/blacklist?confidenceMinimum={min_confidence}&limit={limit}{0}{1}",
-        match plain {
-            true => "&plaintext",
-            false => "",
-        },
-        match ip_version {
-            Some(ver) => format!("&ipVersion={ver}"),
-            None => String::new(),
-        },
-    ))
-    .header("Key", api_key)
-    .call()?;
+    let mut query = ureq::get("https://api.abuseipdb.com/api/v2/blacklist")
+        .query("confidenceMinimum", min_confidence.to_string())
+        .query("limit", limit.to_string());
+    if plain {
+        query = query.query("plaintext", "");
+    }
+    if let Some(ver) = ip_version {
+        query = query.query("ipVersion", ver);
+    }
+
+    let mut response = query.header("Key", api_key).call()?;
 
     if plain {
         writeln!(output, "{}", response.body_mut().read_to_string()?)?;
